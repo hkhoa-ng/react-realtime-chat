@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/react-realtime-chat/static/js/main.603db9b5.js",
+    "main.js": "/react-realtime-chat/static/js/main.20874308.js",
     "index.html": "/react-realtime-chat/index.html",
-    "main.603db9b5.js.map": "/react-realtime-chat/static/js/main.603db9b5.js.map"
+    "main.20874308.js.map": "/react-realtime-chat/static/js/main.20874308.js.map"
   },
   "entrypoints": [
-    "static/js/main.603db9b5.js"
+    "static/js/main.20874308.js"
   ]
 }
