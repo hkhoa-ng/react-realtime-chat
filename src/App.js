@@ -21,6 +21,7 @@ import {
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { IoSend } from "react-icons/io5";
+import { IoIosArrowBack } from "react-icons/io";
 
 firebase.initializeApp({
   apiKey: "AIzaSyDVzk5KupW0TD7vnYwQliyz5X9__2sKyTE",
@@ -42,13 +43,19 @@ function App() {
   return (
     <Center w="100vw" h="100vh" bg="gray.700">
       {user ? (
-        <VStack gap="10px" h="90%" w="90%">
+        <VStack gap="10px" h="95%" w="90%">
           <HStack w="100%">
-            <Heading color="gray.200">Chatie 🕊️</Heading>
-            <Spacer />
             {roomId && (
-              <Button onClick={() => setRoomId("")}>Change Room</Button>
+              <IconButton
+                onClick={() => setRoomId("")}
+                variant="ghost"
+                fontSize="2em"
+                colorScheme="messenger"
+                icon={<IoIosArrowBack />}
+              />
             )}
+            <Heading color="gray.200">🕊️</Heading>
+            <Spacer />
             <SignOut setRoomId={setRoomId} />
           </HStack>
           {roomId ? (
@@ -58,8 +65,8 @@ function App() {
           )}
         </VStack>
       ) : (
-        <VStack gap="50px">
-          <Heading color="gray.200">Chatie 🕊️</Heading>
+        <VStack gap="20px">
+          <Heading color="gray.200">A Minimal Chat 🕊️</Heading>
           <SignIn />
         </VStack>
       )}
@@ -76,26 +83,35 @@ const JoinChatRoom = (props) => {
   };
 
   return (
-    <VStack gap="15px" position="absolute" bottom={10} w="90%">
-      <Text color="gray.200">
-        Enter a room ID to join an existing room, or enter a new room ID to
-        create one:
-      </Text>
-      <form onSubmit={getRoomIdFromUser} style={{ width: "100%" }}>
-        <HStack>
-          <Input
-            color="gray.200"
-            placeholder="Type a room ID..."
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            borderRadius="10px"
-          />
-          <Button borderRadius="10px" colorScheme="messenger" type="submit">
-            Join
-          </Button>
-        </HStack>
-      </form>
-    </VStack>
+    <Center w="100%" h="100%">
+      <VStack gap="15px" w="90%">
+        <Text
+          color="gray.200"
+          bg="gray.600"
+          p="10px"
+          borderRadius="10px"
+          w="100%"
+          textAlign="center"
+        >
+          Enter a room ID to join an existing room, or enter a new room ID to
+          create one.
+        </Text>
+        <form onSubmit={getRoomIdFromUser} style={{ width: "100%" }}>
+          <HStack>
+            <Input
+              color="gray.200"
+              placeholder="Type a room ID..."
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
+              borderRadius="10px"
+            />
+            <Button borderRadius="10px" colorScheme="messenger" type="submit">
+              Join
+            </Button>
+          </HStack>
+        </form>
+      </VStack>
+    </Center>
   );
 };
 
@@ -132,7 +148,7 @@ const ChatRoom = ({ roomId }) => {
   const lastMessage = React.useRef();
 
   const messagesRef = firestore.collection(roomId);
-  const query = messagesRef.orderBy("createdAt").limit(25);
+  const query = messagesRef.orderBy("createdAt").limit(50);
 
   const [messages] = useCollectionData(query, { idField: "id" });
 
@@ -141,9 +157,10 @@ const ChatRoom = ({ roomId }) => {
   const sendMessage = async (e) => {
     e.preventDefault();
 
-    const { uid, photoURL } = auth.currentUser;
+    const { uid, photoURL, displayName } = auth.currentUser;
 
     await messagesRef.add({
+      name: displayName,
       text: formValue,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       uid,
@@ -155,8 +172,12 @@ const ChatRoom = ({ roomId }) => {
     lastMessage.current.scrollIntoView({ behavior: "smooth" });
   };
 
+  React.useEffect(() => {
+    lastMessage.current.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
-    <VStack h="90%" w="100%" gap="10px">
+    <VStack h="90%" w="100%" gap="2%">
       <Box
         overflowY="auto"
         w="100%"
@@ -172,12 +193,13 @@ const ChatRoom = ({ roomId }) => {
             background: "gray.700",
           },
         }}
+        maxH="90%"
       >
         {messages &&
           messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
         <div ref={lastMessage}></div>
       </Box>
-      <Box w="90%" position="absolute" bottom={10}>
+      <Box w="100%">
         <form onSubmit={sendMessage} style={{ width: "100%" }}>
           <HStack>
             <Input
@@ -201,28 +223,39 @@ const ChatRoom = ({ roomId }) => {
 };
 
 const ChatMessage = (props) => {
-  const { text, uid, photoURL } = props.message;
+  const { text, uid, photoURL, name } = props.message;
 
   const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
 
   return (
     <Flex
       key={props.key}
-      p="5px"
+      my="20px"
       flexDir={messageClass === "sent" ? "row-reverse" : "row"}
       gap="5px"
+      px="3%"
     >
-      <Avatar size="sm" src={photoURL} />
-      <Text
-        bg={messageClass === "sent" ? "#0E91EA" : "gray.600"}
-        color="gray.200"
-        py="5px"
-        px="10px"
-        borderRadius="10px"
-        maxW="70%"
+      <Avatar size="sm" src={photoURL} alignSelf="flex-end" />
+      <Flex
+        flexDir="column"
+        alignItems={messageClass === "sent" ? "end" : "start"}
+        gap="3px"
+        w="100%"
       >
-        {text}
-      </Text>
+        <Text color="gray.500" textAlign="end" fontSize="sm">
+          {name}
+        </Text>
+        <Text
+          bg={messageClass === "sent" ? "#0E91EA" : "gray.600"}
+          color="gray.200"
+          py="5px"
+          px="10px"
+          borderRadius="10px"
+          maxW="90%"
+        >
+          {text}
+        </Text>
+      </Flex>
     </Flex>
   );
 };
